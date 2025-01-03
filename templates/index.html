@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Masking</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Mask 12-Digit Numbers in PDF</h1>
+        <form id="upload-form" action="{{ url_for('upload_file') }}" method="POST" enctype="multipart/form-data">
+            <input type="file" name="files" multiple required>
+            <button type="submit">Upload and Process</button>
+        </form>
+        
+        <!-- <div id="progress-container" style="display: none; margin-top: 20px;">
+            <label for="progress-bar">Upload Progress:</label>
+            <progress id="progress-bar" value="0" max="100" style="width: 100%;"></progress>
+            <span id="progress-text">0%</span>
+        </div> -->
+
+        <!-- Loading Animation -->
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Processing your PDFs... Please wait.</p>
+            <button id="cancel-button" class="cancel-button">Cancel</button>
+        </div>
+
+        <div id="message-box" style="display: none; margin-top: 20px;">
+            <p id="message-text"></p>
+            <a id="download-link" href="#" style="display: none;" download="processed_files.zip">Download Processed Files</a>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('upload-form');
+        const loading = document.getElementById('loading');
+        const cancelButton = document.getElementById('cancel-button');
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
+        const downloadLink = document.getElementById('download-link');
+
+        let isCanceled = false;
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent default form submission
+
+            if (isCanceled) return; // Do nothing if canceled
+
+            // Show the loading spinner
+            loading.style.display = 'flex';
+
+            // Create a FormData object to send the files
+            const formData = new FormData(form);
+
+            // Send the files via fetch
+            fetch(form.action, {
+                method: form.method,
+                body: formData,
+            })
+                .then(response => response.json()) // Expect JSON
+                .then(data => {
+                    loading.style.display = 'none'; // Hide loading spinner
+            
+                    if (data.success) {
+                        const downloadUrl = `/download/${data.filename}`;
+                        downloadLink.href = downloadUrl;
+                        downloadLink.style.display = 'inline-block';
+                        downloadLink.textContent = "Download Processed Files";
+                        messageText.textContent = "Processing complete! Click below to download your files.";
+                    } else {
+                        messageText.textContent = `An error occurred: ${data.error}`;
+                    }
+            
+                    messageBox.style.display = 'block';
+                })
+                .catch(error => {
+                    loading.style.display = 'none';
+                    messageBox.style.display = 'block';
+                    messageText.textContent = `An error occurred: ${error.message}`;
+                });
+            
+        });
+
+        cancelButton.addEventListener('click', function () {
+            // Cancel upload logic
+            alert("Cancel was successful!");
+
+
+            window.location.reload();
+        });
+        
+    </script>
+</body>
+</html>
